@@ -3,6 +3,8 @@ package tesseract
 // #cgo LDFLAGS: -L /usr/local/lib -ltesseract
 // #include "tesseract/capi.h"
 // #include <stdlib.h>
+// #include <stdio.h>
+// FILE *getStdout(void) { return stdout; }
 import "C"
 
 import (
@@ -335,7 +337,7 @@ Print Tesseract parameters to the given file.
 
 // DumpVariables dumps the variables set on a Tess to stdout
 func (t *Tess) DumpVariables() {
-	C.TessBaseAPIPrintVariables(t.tba, (*C.FILE)(C.stdout))
+	C.TessBaseAPIPrintVariables(t.tba, C.getStdout())
 }
 
 // BOOL TessBaseAPISetVariable(TessBaseAPI* handle, const char* name, const char* value);
