@@ -127,9 +127,9 @@ func (t *Tess) SetInputName(filename string) {
 
 // void TessBaseAPISetImage(TessBaseAPI* handle, const unsigned char* imagedata, int width, int height, int bytes_per_pixel, int bytes_per_line);
 
-// SetImage sets the input image using the given byte buffer and image parameters.
-func (t *Tess) SetImage(data []byte, w, h, bpp, bpl int) {
-	C.TessBaseAPISetImage(t.tba, (*C.uchar)(unsafe.Pointer(&data[0])), C.int(w), C.int(h), C.int(bpp), C.int(bpl))
+// SetImage sets the input image using the given data pointer and image parameters.
+func (t *Tess) SetImage(data unsafe.Pointer, w, h, bpp, bpl int) {
+	C.TessBaseAPISetImage(t.tba, (*C.uchar)(data), C.int(w), C.int(h), C.int(bpp), C.int(bpl))
 }
 
 // void TessBaseAPISetImage2(TessBaseAPI* handle, const PIX* pix);
