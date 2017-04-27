@@ -67,7 +67,7 @@ func NewTess(datapath string, language string, oem OcrEngineMode, configs []stri
 	// prepare configs
 	var cConfigs **C.char
 	if len(configs) > 0 {
-		cConfigs = (**C.char)(unsafe.Pointer(&configs[0]))
+		cConfigs = stringsliceToCStringVector(configs)
 	}
 	var cConfigsSize = C.int(len(configs))
 

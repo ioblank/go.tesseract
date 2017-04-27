@@ -38,3 +38,11 @@ func cStringVectorToStringslice(cStringVector **C.char) []string {
 		cStringVector = (**C.char)(unsafe.Pointer(cStringVectorPtr))
 	}
 }
+
+func stringsliceToCStringVector(strings []string) **C.char {
+	vector := make([]*C.char, len(strings))
+	for i := 0; i < len(strings); i++ {
+		vector[i] = C.CString(strings[i])
+	}
+	return (**C.char)(unsafe.Pointer(&vector))
+}
