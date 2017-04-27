@@ -35,21 +35,41 @@ func Version() string {
 	return "go.tesseract:" + version + " tesseract lib:" + C.GoString(libTessVersion)
 }
 
+// typedef enum TessOcrEngineMode { OEM_TESSERACT_ONLY, OEM_CUBE_ONLY, OEM_TESSERACT_CUBE_COMBINED, OEM_DEFAULT } TessOcrEngineMode;
+type OcrEngineMode int
+
+const (
+	OEM_TESSERACT_ONLY OcrEngineMode = iota
+	OEM_CUBE_ONLY
+	OEM_TESSERACT_CUBE_COMBINED
+	OEM_DEFAULT
+)
+
 // TessBaseAPI* TessBaseAPICreate();
-// int TessBaseAPIInit3(TessBaseAPI* handle, const char* datapath, const char* language);
+// int TessBaseAPIInit1(TessBaseAPI* handle, const char* datapath, const char* language, TessOcrEngineMode oem, char** configs, int configs_size);
 
 // NewTess creates and returns a new tesseract instance.
 // When datapath is an empty string, the TESSDATA_PREFIX environment variable
 // is used. If it's empty, the compile-time TESSDATA_PREFIX constant is used
 // instead. If it was not defined, datapath is set to the current working
 // directory.
-func NewTess(datapath string, language string) (*Tess, error) {
+func NewTess(datapath string, language string, oem OcrEngineMode, configs []string) (*Tess, error) {
 	// create new empty TessBaseAPI
 	tba := C.TessBaseAPICreate()
 
 	// prepare string for C call
 	cLanguage := C.CString(language)
 	defer C.free(unsafe.Pointer(cLanguage))
+
+	// prepare engine mode
+	cOcrEngineMode := C.TessOcrEngineMode(oem)
+
+	// prepare configs
+	var cConfigs **C.char
+	if len(configs) > 0 {
+		cConfigs = (**C.char)(unsafe.Pointer(&configs[0]))
+	}
+	var cConfigsSize = C.int(len(configs))
 
 	var res C.int
 	// Tesseract ignores TESSDATA_PREFIX when datapath is not NULL
@@ -59,9 +79,9 @@ func NewTess(datapath string, language string) (*Tess, error) {
 		defer C.free(unsafe.Pointer(cDatapath))
 
 		// initialize datapath and language on TessBaseAPI
-		res = C.TessBaseAPIInit3(tba, cDatapath, cLanguage)
+		res = C.TessBaseAPIInit1(tba, cDatapath, cLanguage, cOcrEngineMode, cConfigs, cConfigsSize)
 	} else {
-		res = C.TessBaseAPIInit3(tba, nil, cLanguage)
+		res = C.TessBaseAPIInit1(tba, nil, cLanguage, cOcrEngineMode, cConfigs, cConfigsSize)
 	}
 
 	if res != 0 {
@@ -483,7 +503,6 @@ func (c *ChoiceIterator) Text() (string, error) {
 
 // typedef struct TessPageIterator TessPageIterator;
 // typedef struct TessMutableIterator TessMutableIterator;
-// typedef enum TessOcrEngineMode { OEM_TESSERACT_ONLY, OEM_CUBE_ONLY, OEM_TESSERACT_CUBE_COMBINED, OEM_DEFAULT } TessOcrEngineMode;
 // typedef enum TessPolyBlockType { PT_UNKNOWN, PT_FLOWING_TEXT, PT_HEADING_TEXT, PT_PULLOUT_TEXT, PT_TABLE, PT_VERTICAL_TEXT, PT_CAPTION_TEXT, PT_FLOWING_IMAGE, PT_HEADING_IMAGE, PT_PULLOUT_IMAGE, PT_HORZ_LINE, PT_VERT_LINE, PT_NOISE, PT_COUNT } TessPolyBlockType;
 // typedef enum TessOrientation { ORIENTATION_PAGE_UP, ORIENTATION_PAGE_RIGHT, ORIENTATION_PAGE_DOWN, ORIENTATION_PAGE_LEFT } TessOrientation;
 // typedef enum TessWritingDirection { WRITING_DIRECTION_LEFT_TO_RIGHT, WRITING_DIRECTION_RIGHT_TO_LEFT, WRITING_DIRECTION_TOP_TO_BOTTOM } TessWritingDirection;
@@ -511,8 +530,8 @@ func (c *ChoiceIterator) Text() (string, error) {
 // void TessBaseAPIPrintVariables( const TessBaseAPI* handle, FILE* fp);
 // BOOL TessBaseAPIPrintVariablesToFile(const TessBaseAPI* handle, const char* filename);
 
-// int TessBaseAPIInit1(TessBaseAPI* handle, const char* datapath, const char* language, TessOcrEngineMode oem, char** configs, int configs_size);
 // int TessBaseAPIInit2(TessBaseAPI* handle, const char* datapath, const char* language, TessOcrEngineMode oem);
+// int TessBaseAPIInit3(TessBaseAPI* handle, const char* datapath, const char* language);
 
 // int TessBaseAPIInitLangMod(TessBaseAPI* handle, const char* datapath, const char* language);
 // void TessBaseAPIInitForAnalysePage(TessBaseAPI* handle);
@@ -526,8 +545,6 @@ func (c *ChoiceIterator) Text() (string, error) {
 // char* TessBaseAPIRect(TessBaseAPI* handle, const unsigned char* imagedata, int bytes_per_pixel, int bytes_per_line, int left, int top, int width, int height);
 
 // void TessBaseAPIClearAdaptiveClassifier(TessBaseAPI* handle);
-
-// void TessBaseAPISetImage(TessBaseAPI* handle, const unsigned char* imagedata, int width, int height, int bytes_per_pixel, int bytes_per_line);
 
 // void TessBaseAPISetSourceResolution(TessBaseAPI* handle, int ppi);
 

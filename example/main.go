@@ -7,8 +7,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/GeertJohan/go.leptonica"
-	"github.com/GeertJohan/go.tesseract"
+	"gopkg.in/GeertJohan/go.leptonica.v1"
+
+	"github.com/ioblank/go.tesseract/tesseract"
 )
 
 func main() {
@@ -20,11 +21,11 @@ func main() {
 	fmt.Println(tesseract.Version())
 
 	// create new tess instance and point it to the tessdata location. Set language to english.
-	tessdata_prefix := os.Getenv("TESSDATA_PREFIX")
-	if tessdata_prefix == "" {
-		tessdata_prefix = "/usr/local/share"
+	tessdataPrefix := os.Getenv("TESSDATA_PREFIX")
+	if tessdataPrefix == "" {
+		tessdataPrefix = "/usr/local/share"
 	}
-	t, err := tesseract.NewTess(filepath.Join(tessdata_prefix, "tessdata"), "eng")
+	t, err := tesseract.NewTess(filepath.Join(tessdataPrefix, "tessdata"), "eng", tesseract.OEM_DEFAULT, nil)
 	if err != nil {
 		log.Fatalf("Error while initializing Tess: %s\n", err)
 	}
