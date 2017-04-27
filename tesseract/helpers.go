@@ -44,5 +44,5 @@ func stringsliceToCStringVector(strings []string) **C.char {
 	for i := 0; i < len(strings); i++ {
 		vector[i] = C.CString(strings[i])
 	}
-	return (**C.char)(unsafe.Pointer(&vector))
+	return (**C.char)(unsafe.Pointer(&vector[0]))
 }
